@@ -7,6 +7,14 @@ public class Record {
     private LocalDateTime checkIn;
     private LocalDateTime checkOut;
 
+    public Record(int id, Student student, String bicycleDescription, LocalDateTime checkIn, LocalDateTime checkOut) {
+        this.id = id;
+        this.student = student;
+        this.bicycleDescription = bicycleDescription;
+        this.checkIn = checkIn;
+        this.checkOut = checkOut;
+    }
+
     public Record(int id, Student student, String bicycleDescription, LocalDateTime checkIn) {
         this.id = id;
         this.student = student;

@@ -213,6 +213,32 @@ public class BicycleRackDao {
         return records;
     }
 
+    public void checkOutRecord(int id) {
+        Connection connection = null;
+        PreparedStatement preparedStatement = null;
+        try {
+            connection = DriverManager.getConnection(this.databaseUrl);
+            String query = "UPDATE records SET checkOut = ? WHERE id = ? AND checkOut IS NULL";
+            preparedStatement = connection.prepareStatement(query);
+            preparedStatement.setString(1, String.valueOf(LocalDateTime.now()));
+            preparedStatement.setInt(2, id);
+            preparedStatement.executeUpdate();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        } finally {
+            try {
+                if (preparedStatement != null) {
+                    preparedStatement.close();
+                }
+                if (connection != null) {
+                    connection.close();
+                }
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+        }
+    }
+
     private Record mapResultSetToRecord(ResultSet resultSet) {
         Record record = null;
         try {
@@ -224,7 +250,8 @@ public class BicycleRackDao {
                     resultSet.getInt("id"),
                     student,
                     resultSet.getString("bicycleDescription"),
-                    LocalDateTime.parse(resultSet.getString("checkIn"))
+                    LocalDateTime.parse(resultSet.getString("checkIn")),
+                    resultSet.getString("checkOut") == null ? null : LocalDateTime.parse(resultSet.getString("checkOut"))
             );
         } catch (SQLException e) {
             throw new RuntimeException(e);
