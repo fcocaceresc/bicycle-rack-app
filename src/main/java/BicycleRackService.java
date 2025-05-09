@@ -14,7 +14,7 @@ public class BicycleRackService {
      */
     public Record checkIn(Student student, String bicycleDescription) {
         validateCheckIn(student, bicycleDescription);
-        Record record = new Record(records.size() + 1, student, bicycleDescription);
+        Record record = new Record(records.size() + 1, student, bicycleDescription, LocalDateTime.now());
         records.add(record);
         return record;
     }

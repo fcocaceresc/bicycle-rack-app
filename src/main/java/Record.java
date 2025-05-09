@@ -7,11 +7,11 @@ public class Record {
     private LocalDateTime checkIn;
     private LocalDateTime checkOut;
 
-    public Record(int id, Student student, String bicycleDescription) {
+    public Record(int id, Student student, String bicycleDescription, LocalDateTime checkIn) {
         this.id = id;
         this.student = student;
         this.bicycleDescription = bicycleDescription;
-        this.checkIn = LocalDateTime.now();
+        this.checkIn = checkIn;
         this.checkOut = null;
     }
 
