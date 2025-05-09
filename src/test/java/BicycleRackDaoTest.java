@@ -132,4 +132,30 @@ class BicycleRackDaoTest {
         });
         assertEquals("The bicycle rack is full", exception.getMessage());
     }
+
+    @Test
+    void checkOutRecord() {
+        dao.createRecord("4", "amadeus", "oxford");
+        dao.checkOutRecord(1);
+        Record record = dao.getRecords().getFirst();
+        assertNotNull(record.getCheckOut());
+    }
+
+    @Test
+    void checkOutNonExistingRecord() {
+        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
+           dao.checkOutRecord(1);
+        });
+        assertEquals("Record not found", exception.getMessage());
+    }
+
+    @Test
+    void checkOutAlreadyCheckedOutRecord() {
+        dao.createRecord("4", "amadeus", "oxford");
+        dao.checkOutRecord(1);
+        Exception exception = assertThrows(IllegalStateException.class, () -> {
+            dao.checkOutRecord(1);
+        });
+        assertEquals("The record is already checked out", exception.getMessage());
+    }
 }
