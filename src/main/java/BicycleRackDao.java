@@ -66,6 +66,9 @@ public class BicycleRackDao {
     }
 
     public void createRecord(String studentId, String studentName, String bicycleDescription) {
+        validateCreateRecordInput(studentId, studentName, bicycleDescription);
+        validateStudentHasANotCheckedOutRecord(studentId);
+        validateBicycleRackCapacity();
         Connection connection = null;
         PreparedStatement preparedStatement = null;
         try {
@@ -77,6 +80,89 @@ public class BicycleRackDao {
             preparedStatement.setString(3, bicycleDescription.trim());
             preparedStatement.setString(4, String.valueOf(LocalDateTime.now()));
             preparedStatement.executeUpdate();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        } finally {
+            try {
+                if (preparedStatement != null) {
+                    preparedStatement.close();
+                }
+                if (connection != null) {
+                    connection.close();
+                }
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+        }
+    }
+
+    private void validateCreateRecordInput(String studentId, String studentName, String bicycleDescription) {
+        if (studentId == null || studentId.trim().isEmpty()) {
+            throw new IllegalArgumentException("The student id can't be null or empty");
+        }
+        if (studentName == null || studentName.trim().isEmpty()) {
+            throw new IllegalArgumentException("The student name can't be null or empty");
+        }
+        if (bicycleDescription == null || bicycleDescription.trim().isEmpty()) {
+            throw new IllegalArgumentException("The bicycle description can't be null or empty");
+        }
+        int studentIdMaxLength = ConfigReader.getIntValue("record.student.id.maxLength");
+        if (studentId.length() > studentIdMaxLength) {
+            throw new IllegalArgumentException("The student id exceeds the maximum length of " + studentIdMaxLength + " characters");
+        }
+        int studentNameMaxLength = ConfigReader.getIntValue("record.student.name.maxLength");
+        if (studentName.length() > studentNameMaxLength) {
+            throw new IllegalArgumentException("The student name exceeds the maximum length of " + studentNameMaxLength + " characters");
+        }
+        int bicycleDescriptionMaxLength = ConfigReader.getIntValue("record.bicycleDescription.maxLength");
+        if (bicycleDescription.length() > bicycleDescriptionMaxLength) {
+            throw new IllegalArgumentException("The bicycle description exceeds the maximum length of " + bicycleDescriptionMaxLength + " characters");
+        }
+    }
+
+    private void validateStudentHasANotCheckedOutRecord(String studentId) {
+        Connection connection = null;
+        PreparedStatement preparedStatement = null;
+        try {
+            connection = DriverManager.getConnection(this.databaseUrl);
+            String query = "SELECT * FROM records WHERE studentId = ? AND checkOut IS NULL";
+            preparedStatement = connection.prepareStatement(query);
+            preparedStatement.setString(1, studentId);
+            ResultSet resultSet = preparedStatement.executeQuery();
+            if (resultSet.next()) {
+                throw new IllegalStateException("The student has a not checked out record");
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        } finally {
+            try {
+                if (preparedStatement != null) {
+                    preparedStatement.close();
+                }
+                if (connection != null) {
+                    connection.close();
+                }
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+        }
+    }
+
+    private void validateBicycleRackCapacity() {
+        Connection connection = null;
+        PreparedStatement preparedStatement = null;
+        try {
+            connection = DriverManager.getConnection(this.databaseUrl);
+            String query = "SELECT COUNT(*) FROM records WHERE checkOut IS NULL";
+            preparedStatement = connection.prepareStatement(query);
+            ResultSet resultSet = preparedStatement.executeQuery();
+            if (resultSet.next()) {
+                int count = resultSet.getInt(1);
+                int maxCapacity = ConfigReader.getIntValue("bicycleRack.capacity");
+                if (count >= maxCapacity) {
+                    throw new IllegalStateException("The bicycle rack is full");
+                }
+            }
         } catch (SQLException e) {
             throw new RuntimeException(e);
         } finally {

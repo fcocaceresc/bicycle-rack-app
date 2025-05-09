@@ -64,3 +64,4 @@ replay_pid*
 
 .idea/
 *.db
+src/main/resources/config.properties
