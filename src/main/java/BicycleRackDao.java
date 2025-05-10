@@ -214,6 +214,7 @@ public class BicycleRackDao {
     }
 
     public void checkOutRecord(int id) {
+        validateCheckOut(id);
         Connection connection = null;
         PreparedStatement preparedStatement = null;
         try {
@@ -227,6 +228,41 @@ public class BicycleRackDao {
             throw new RuntimeException(e);
         } finally {
             try {
+                if (preparedStatement != null) {
+                    preparedStatement.close();
+                }
+                if (connection != null) {
+                    connection.close();
+                }
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+        }
+    }
+
+    private void validateCheckOut(int id) {
+        Connection connection = null;
+        PreparedStatement preparedStatement = null;
+        ResultSet resultSet = null;
+        try {
+            connection = DriverManager.getConnection(this.databaseUrl);
+            String query = "SELECT * FROM records WHERE id = ?";
+            preparedStatement = connection.prepareStatement(query);
+            preparedStatement.setInt(1, id);
+            resultSet = preparedStatement.executeQuery();
+            if (!resultSet.next()) {
+                throw new IllegalArgumentException("Record not found");
+            }
+            if (resultSet.getString("checkOut") != null) {
+                throw new IllegalStateException("The record is already checked out");
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        } finally {
+            try {
+                if (resultSet != null) {
+                    resultSet.close();
+                }
                 if (preparedStatement != null) {
                     preparedStatement.close();
                 }
